@@ -378,13 +378,7 @@ function initiate_plot() {
       .attr("transform", "translate("+0+","+(height-margin.bottom)+")");
       
   xAxis = d3.axisBottom(xScale)
-      .tickFormat(
-        d3.format(
-          Math.abs(xScale.domain()[0]) <  0.01 ||
-          Math.abs(xScale.domain()[0]) >= 1000 ||
-          Math.abs(xScale.domain()[1]) <  0.01 ||
-          Math.abs(xScale.domain()[1]) >= 1000 ?
-          ".2~e" : ".3~r"));
+      .tickFormat(d => d == 0 ? "0" : (d < 0.01 || d >= 1000 ? d3.format(".2~e")(d) : d3.format(".3~r")(d)))
   gX = bottomPanel.append("g")
       .attr("id", "xAxis")
       .attr("class", "axis")
@@ -400,13 +394,7 @@ function initiate_plot() {
       .attr("transform", "translate("+margin.left+","+0+")");
   
   yAxis = d3.axisLeft(yScale)
-      .tickFormat(
-        d3.format(
-          Math.abs(yScale.domain()[0]) <  0.01 ||
-          Math.abs(yScale.domain()[0]) >= 1000 ||
-          Math.abs(yScale.domain()[1]) <  0.01 ||
-          Math.abs(yScale.domain()[1]) >= 1000 ?
-          ".2~e" : ".3~r"));
+      .tickFormat(d => d == 0 ? "0" : (d < 0.01 || d >= 1000 ? d3.format(".2~e")(d) : d3.format(".3~r")(d)))
   gY = leftPanel.append("g")
       .attr("id", "yAxis")
       .attr("class", "axis")
