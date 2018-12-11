@@ -14,7 +14,7 @@
   
   
   data = list(hda.datatype.dataprovider(hda, 'dataset-dict'))
-  # for line in data: print line
+  for line in data: print line
     
   bounds = {val : [min([line[val] for line in data if line[val] is not None]),
                  max([line[val] for line in data if line[val] is not None])] for val in names}
@@ -23,8 +23,12 @@
     mx = bounds[k][1]
     rg = mx - mn
     if mn == mx:
-      bounds[k][0] = mn - mn*0.01
-      bounds[k][1] = mx + mx*0.01
+      if mn == 0:
+        bounds[k][0] = -0.01
+        bounds[k][1] =  0.01
+      else:
+        bounds[k][0] = mn - mn*0.01
+        bounds[k][1] = mx + mx*0.01
     else:
       bounds[k][0] = mn - rg*0.01
       bounds[k][1] = mx + rg*0.01
@@ -144,9 +148,9 @@
               							  data-prettify-enabled="true" data-data-type="number" width="100%" >
             </div>
             <div class="col-sm-1 lab">Feasibility scale</div>
-            <div class="col-sm-2" id="color_scale">
-                <img src="static/RdYlGn.png" alt="RdYlGn" style="max-width:90%;margin:0% 5%;" width="100%" height="20">
-                <svg id="color_axis" style="max-width:100%;" width="100%" height="20">
+            <div class="col-sm-2" id="color_scale" style="padding: 0% 0% 0% 0%">
+                <img src="static/RdYlGn.png" alt="RdYlGn" style="padding: 0% 10% 0% 10%"  width="100%" height="20">
+                <svg id="color_axis" width="100%" height="20">
                 </svg>
             </div>
         </div>
@@ -267,19 +271,21 @@ function draw_color_gradient_axis() {
   // following is responsible for correct axis of color gradient below the gradient picture
   neg_color_xScale = d3.scaleLinear()
       .domain([d3.min(window.bounds['Robustness'],parseFloat),gradient_middle])
-      .range([0.05*d3.select("#color_scale").property("offsetWidth"), 
-              0.50*d3.select("#color_scale").property("offsetWidth")]);
+      .range([0.1*d3.select("#color_scale").property("offsetWidth"), 
+              0.5*d3.select("#color_scale").property("offsetWidth")]);
   pos_color_xScale = d3.scaleLinear()
       .domain([gradient_middle,d3.max(window.bounds['Robustness'],parseFloat)])
       .range([0.5*d3.select("#color_scale").property("offsetWidth"), 
               0.9*d3.select("#color_scale").property("offsetWidth")]);
              
   neg_color_xAxis = d3.axisBottom(neg_color_xScale)
+      .tickFormat(d => d == 0 ? "0" : (Math.abs(d) < 0.01 || Math.abs(d) >= 1000 ? d3.format(".2~e")(d) : d3.format(".3~r")(d)))
       .tickValues([
           d3.min(window.bounds['Robustness'],parseFloat)//,
           //(d3.min(window.bounds['Robustness'],parseFloat)*0.5).toExponential(1)
           ]);
   pos_color_xAxis = d3.axisBottom(pos_color_xScale)
+      .tickFormat(d => d == 0 ? "0" : (Math.abs(d) < 0.01 || Math.abs(d) >= 1000 ? d3.format(".2~e")(d) : d3.format(".3~r")(d)))
       .tickValues([
           gradient_middle,
           //(d3.max(window.bounds['Robustness'],parseFloat)*0.5).toExponential(1),
@@ -378,7 +384,7 @@ function initiate_plot() {
       .attr("transform", "translate("+0+","+(height-margin.bottom)+")");
       
   xAxis = d3.axisBottom(xScale)
-      .tickFormat(d => d == 0 ? "0" : (d < 0.01 || d >= 1000 ? d3.format(".2~e")(d) : d3.format(".3~r")(d)))
+      .tickFormat(d => d == 0 ? "0" : (Math.abs(d) < 0.01 || Math.abs(d) >= 1000 ? d3.format(".2~e")(d) : d3.format(".3~r")(d)))
   gX = bottomPanel.append("g")
       .attr("id", "xAxis")
       .attr("class", "axis")
@@ -394,7 +400,7 @@ function initiate_plot() {
       .attr("transform", "translate("+margin.left+","+0+")");
   
   yAxis = d3.axisLeft(yScale)
-      .tickFormat(d => d == 0 ? "0" : (d < 0.01 || d >= 1000 ? d3.format(".2~e")(d) : d3.format(".3~r")(d)))
+      .tickFormat(d => d == 0 ? "0" : (Math.abs(d) < 0.01 || Math.abs(d) >= 1000 ? d3.format(".2~e")(d) : d3.format(".3~r")(d)))
   gY = leftPanel.append("g")
       .attr("id", "yAxis")
       .attr("class", "axis")
@@ -423,9 +429,11 @@ function update_axes() {
   yScale.domain([d3.min(window.bounds[yDim],parseFloat),
                  d3.max(window.bounds[yDim],parseFloat)])
   // Update an axis component according to selected dimensions
-  xAxis = d3.axisBottom(xScale);
+  xAxis = d3.axisBottom(xScale)
+      .tickFormat(d => d == 0 ? "0" : (Math.abs(d) < 0.01 || Math.abs(d) >= 1000 ? d3.format(".2~e")(d) : d3.format(".3~r")(d)));
   gX.call(xAxis);
-  yAxis = d3.axisLeft(yScale);
+  yAxis = d3.axisLeft(yScale)
+      .tickFormat(d => d == 0 ? "0" : (Math.abs(d) < 0.01 || Math.abs(d) >= 1000 ? d3.format(".2~e")(d) : d3.format(".3~r")(d)));
   gY.call(yAxis);
   // reset brushes
   //gBX.call(brushX.move, null);
