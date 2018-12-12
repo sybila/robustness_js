@@ -20,9 +20,11 @@
   #print uniqs
                  
   bounds = {val : [min(uniqs[val]),max(uniqs[val])] for val in names}
+
   for k in bounds:
     mn = bounds[k][0]
     mx = bounds[k][1]
+    
     rg = mx - mn
     if mn == mx:
       if mn == 0:
@@ -34,7 +36,6 @@
     else:
       bounds[k][0] = mn - rg*0.01
       bounds[k][1] = mx + rg*0.01
-  #print bounds
 
   names = [i for i in names if i != 'Robustness']
   #print names  
@@ -153,7 +154,13 @@
             </div>
             <div class="col-sm-1 lab">Feasibility scale</div>
             <div class="col-sm-2" id="color_scale" style="padding: 0% 0% 0% 0%">
-                <img src="static/RdYlGn.png" alt="RdYlGn" style="padding: 0% 10% 0% 10%"  width="100%" height="20">
+                % if bounds['Robustness'][0] > 0:
+                  <img src="static/YlGn.png" alt="YlGn" style="padding: 0% 10% 0% 10%"  width="100%" height="20">
+                % elif bounds['Robustness'][1] < 0:
+                  <img src="static/YlOrRd.png" alt="YlOrRd" style="padding: 0% 10% 0% 10%"  width="100%" height="20">
+                % else:
+                  <img src="static/RdYlGn.png" alt="RdYlGn" style="padding: 0% 10% 0% 10%"  width="100%" height="20">
+                % endif
                 <svg id="color_axis" width="100%" height="20">
                 </svg>
             </div>
@@ -475,9 +482,22 @@ function data_filter(d, i) {
   return true;
 }
 
+function handle_negative_scale(d){
+    
+}
+
 function draw() {
   
   d3.selectAll(".points").remove();     // because of the automatic redrawing of plot in response slider etc.
+
+  var scheme_method = "d3.interpolateRdYlGn";
+  var factor = 0;
+  if (window.bounds['Robustness'][0] > 0) {
+    scheme_method = "d3.interpolateYlGn";
+  } else if (window.bounds['Robustness'][1] < 0) {
+    scheme_method = "d3.interpolateYlOrRd";
+    factor = 1;
+  }
 
   container.selectAll(".points")
     .data(window.data)
@@ -490,8 +510,8 @@ function draw() {
     .attr("cy", d => yScale(d[yDim]) )
     .attr("r", radius )
     //.attr("fill", d => d3.interpolateRdYlGn((d['Robustness']*0.01 + 1)*0.5) )
-    .attr("fill", d => Number(d['Robustness']) < gradient_middle ? d3.interpolateRdYlGn(negative_color_scale(Number(d['Robustness']))) : 
-                                                     d3.interpolateRdYlGn(positive_color_scale(Number(d['Robustness']))) )
+    .attr("fill", d => Number(d['Robustness']) < gradient_middle ? eval(scheme_method)( Math.abs(negative_color_scale(Number(d['Robustness'])) - factor) ) : 
+                                                     eval(scheme_method)( Math.abs(positive_color_scale(Number(d['Robustness'])) - factor) ) )
     //.attr("stroke", noColor )
     .attr("stroke-width", 0)
     .on("mouseover", handleMouseOver)
