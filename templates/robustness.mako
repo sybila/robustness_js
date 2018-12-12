@@ -14,10 +14,12 @@
   
   
   data = list(hda.datatype.dataprovider(hda, 'dataset-dict'))
-  for line in data: print line
+  #for line in data: print line
     
-  bounds = {val : [min([line[val] for line in data if line[val] is not None]),
-                 max([line[val] for line in data if line[val] is not None])] for val in names}
+  uniqs  = {val : sorted(set([line[val] for line in data if line[val] is not None])) for val in names}
+  #print uniqs
+                 
+  bounds = {val : [min(uniqs[val]),max(uniqs[val])] for val in names}
   for k in bounds:
     mn = bounds[k][0]
     mx = bounds[k][1]
@@ -32,10 +34,10 @@
     else:
       bounds[k][0] = mn - rg*0.01
       bounds[k][1] = mx + rg*0.01
-  print bounds
+  #print bounds
 
   names = [i for i in names if i != 'Robustness']
-  # print names  
+  #print names  
 
 %>
 <html lan"en">
@@ -70,6 +72,8 @@
       console.log(window.data);
       window.bounds = ${bounds};
       console.log(window.bounds);
+      window.uniqs = ${uniqs};
+      console.log(window.uniqs);
       
       // SPECIAL DEFINITIONS
       Set.prototype.difference = function(setB) {
@@ -161,20 +165,32 @@
                 % if len(names) > 2:
                   % for val in names:
                     <% 
-                    min_val  = bounds[val][0]
-                    max_val  = bounds[val][1]
-                    step_val = abs(max_val-min_val)*0.01
+                    min_val  = 0
+                    max_val  = len(uniqs[val])-1
+                    real_val = uniqs[val][min_val]
+                    step_val = 1
                     %>
                     % if val == names[0] or val == names[1]:
-                      <div class="form-group" id="slider_${val}_wrapper_VF" hidden>
+                      <div class="form-group" id="slider_${val}_wrapper" hidden>
                     % else:
-                      <div class="form-group" id="slider_${val}_wrapper_VF">
+                      <div class="form-group" id="slider_${val}_wrapper">
                     % endif
-          							<label class="control-label" for="slider_${val}_VF" id="text_${val}_VF">Value of ${val}</label>
-          							<input class="js-range-slider" id="slider_${val}_VF" 
+          							<label class="control-label" for="slider_${val}" id="text_${val}">Value of ${val}: ${real_val}</label>
+          							<!--input class="js-range-slider" id="slider_${val}" 
           							  data-min=${min_val} data-max=${max_val} data-from=${(max_val-min_val)*0.5+min_val} data-step=${step_val} 
           							  min=${min_val} max=${max_val} value=${(max_val-min_val)*0.5+min_val} step=${step_val} data-grid="true" data-grid-num="10" 
-          							  data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-data-type="number" >
+          							  data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-data-type="number" -->
+          							<input type="range" list="tickmarks_${val}" id="slider_${val}" min=${min_val} max=${max_val} value=${min_val} step=${step_val} >
+          							<!-- maybe for the future because currently not supported everywhere -->
+          							<!--datalist id="tickmarks_${val}">
+          							  % for k,v in enumerate(uniqs[val]):
+          							    % if k == 0 or k == len(uniqs[val])-1:
+                              <option value="${v}" label="${v}">
+                            % else:
+                              <option value="${v}">
+                            % endif
+                          % endfor
+                        </datalist-->
           						</div>
                   % endfor
                 % endif
@@ -200,11 +216,9 @@ d3.select("#x_axis").on("change", function() {
     d3.select("#y_axis").property('value',xDim);
     yDim = xDim;
   } else {
-    d3.select("#slider_"+xDim+"_wrapper_VF").attr("hidden",null);
     d3.select("#slider_"+xDim+"_wrapper").attr("hidden",null);
   }
   xDim = this.value;
-  d3.select("#slider_"+this.value+"_wrapper_VF").attr("hidden","hidden");
   d3.select("#slider_"+this.value+"_wrapper").attr("hidden","hidden");
 
   update_axes()
@@ -218,11 +232,9 @@ d3.select("#y_axis").on("change", function() {
     d3.select("#x_axis").property('value',yDim);
     xDim = yDim;
   } else {
-    d3.select("#slider_"+yDim+"_wrapper_VF").attr("hidden",null);
     d3.select("#slider_"+yDim+"_wrapper").attr("hidden",null);
   }
   yDim = this.value;
-  d3.select("#slider_"+this.value+"_wrapper_VF").attr("hidden","hidden");
   d3.select("#slider_"+this.value+"_wrapper").attr("hidden","hidden");
   
   update_axes()
@@ -240,6 +252,8 @@ d3.select(window).on("resize", function() {
   % for val in names:
       (function(i) {
           d3.select("#slider_"+i).on("input", function() {
+              // update of value above the particular slider
+              d3.select("#text_"+i).text("Value of "+i+": "+window.uniqs[i][Number(d3.select(this).property("value"))])
               draw();
           })
       })('${val}');
@@ -281,14 +295,12 @@ function draw_color_gradient_axis() {
   neg_color_xAxis = d3.axisBottom(neg_color_xScale)
       .tickFormat(d => d == 0 ? "0" : (Math.abs(d) < 0.01 || Math.abs(d) >= 1000 ? d3.format(".2~e")(d) : d3.format(".3~r")(d)))
       .tickValues([
-          d3.min(window.bounds['Robustness'],parseFloat)//,
-          //(d3.min(window.bounds['Robustness'],parseFloat)*0.5).toExponential(1)
+          d3.min(window.bounds['Robustness'],parseFloat)
           ]);
   pos_color_xAxis = d3.axisBottom(pos_color_xScale)
       .tickFormat(d => d == 0 ? "0" : (Math.abs(d) < 0.01 || Math.abs(d) >= 1000 ? d3.format(".2~e")(d) : d3.format(".3~r")(d)))
       .tickValues([
           gradient_middle,
-          //(d3.max(window.bounds['Robustness'],parseFloat)*0.5).toExponential(1),
           d3.max(window.bounds['Robustness'],parseFloat)]);
           
   d3.selectAll(".colorAxis").remove();
@@ -442,7 +454,6 @@ function update_axes() {
 
 function handleMouseOver(d, i) {
   if(d3.select(this).attr("class") == "points") {
-    //infoPanel_data = "Feasibility: "+Number((d['Robustness']*0.01+1)*0.5).toFixed(5)
     infoPanel_data = "Feasibility: "+(Math.abs(Number(d['Robustness'])) < 0.01 ? Number(d['Robustness']).toExponential(3) : Number(d['Robustness']).toFixed(4))
   }
   d3.select("#infoPanel").property("innerHTML", infoPanel_data)
@@ -452,6 +463,18 @@ function handleMouseOut(d, i) {
   d3.select("#infoPanel").property("innerHTML", "\n")
 }
 
+function data_filter(d, i) {
+  for(var idx in window.names) {
+    var name = window.names[idx];
+    var value_from_slider = Number(d3.select("#slider_"+name).property("value")); // index into list of unique values: window.uniqs
+    if(name == xDim || name == yDim)  continue;
+    
+    if(Number(d[name]) != window.uniqs[name][value_from_slider]) return false;
+    //else console.log(Number(d[name])+" vs. "+window.uniqs[name][value_from_slider]);
+  }
+  return true;
+}
+
 function draw() {
   
   d3.selectAll(".points").remove();     // because of the automatic redrawing of plot in response slider etc.
@@ -459,6 +482,7 @@ function draw() {
   container.selectAll(".points")
     .data(window.data)
     .enter()
+    .filter(data_filter)
     .append("circle")
     .attr("class", "points")
     //.attr("id", d => d.id)
