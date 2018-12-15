@@ -23,20 +23,21 @@
   #print bounds  
 
   for k in bounds:
-    mn = bounds[k][0]
-    mx = bounds[k][1]
-    
-    rg = mx - mn
-    if mn == mx:
-      if mn == 0:
-        bounds[k][0] = -0.01
-        bounds[k][1] =  0.01
+    if(k != 'Robustness'):
+      mn = bounds[k][0]
+      mx = bounds[k][1]
+      
+      rg = mx - mn
+      if mn == mx:
+        if mn == 0:
+          bounds[k][0] = -0.01
+          bounds[k][1] =  0.01
+        else:
+          bounds[k][0] = mn - mn*0.01
+          bounds[k][1] = mx + mx*0.01
       else:
-        bounds[k][0] = mn - mn*0.01
-        bounds[k][1] = mx + mx*0.01
-    else:
-      bounds[k][0] = mn - rg*0.01
-      bounds[k][1] = mx + rg*0.01
+        bounds[k][0] = mn - rg*0.01
+        bounds[k][1] = mx + rg*0.01
 
   names = [i for i in names if i != 'Robustness']
   #print bounds  
@@ -235,7 +236,7 @@ d3.select('#checkbox_normalisation').on("change", function() {
         .domain([d3.min(0, robustness_min), d3.max(0, robustness_max)])
         .range([0,1])
     
-      //gradient_middle = robustness_min * 0.5;
+      gradient_middle = robustness_min * 0.5;
       max_label_scale = 0;
     } else {
       color_scale = d3.scaleLinear()
