@@ -169,7 +169,7 @@
             <div class="col-sm-4">
                 <label class="normalisation-label" for="checkbox_normalisation" id="text_CB_normalisation">Normalise</label>
                 <input type="checkbox" value="mode" class="cb" id="checkbox_normalisation" 
-                % if bounds['Robustness'][0] > 0 and bounds['Robustness'][1] < 0:
+                % if bounds['Robustness'][0] > 0 or bounds['Robustness'][1] < 0:
                   unchecked
                 % else:
                   disabled
