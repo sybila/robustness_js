@@ -19,7 +19,8 @@
   uniqs  = {val : sorted(set([line[val] for line in data if line[val] is not None])) for val in names}
   #print uniqs
                  
-  bounds = {val : [min(uniqs[val]),max(uniqs[val])] for val in names}
+  bounds = {val : [min(uniqs[val]),max(uniqs[val])] for val in uniqs}
+  #print bounds  
 
   for k in bounds:
     if(k != 'Robustness'):
@@ -39,7 +40,7 @@
         bounds[k][1] = mx + rg*0.01
 
   names = [i for i in names if i != 'Robustness']
-  #print names  
+  #print bounds['Robustness']
 
 %>
 <html lan"en">
@@ -126,32 +127,32 @@
             <div class="col-sm-1 lab">Horizontal axis</div>
             <div class="col-sm-2">
                 <select name="xAxis" id="x_axis" class="form-control" required="">
-    					  % for val in names:
-      						% if val == names[0]:
-      						  <option value="${val}" selected>${val}</option>
-      						% else:
-      						  <option value="${val}">${val}</option>
-      						% endif
-    					  % endfor
+                          % for val in names:
+                            % if val == names[0]:
+                              <option value="${val}" selected>${val}</option>
+                            % else:
+                              <option value="${val}">${val}</option>
+                            % endif
+                          % endfor
                 </select>
             </div>
             <div class="col-sm-1 lab">Vertical axis</div>
             <div class="col-sm-2">
                 <select name="yAxis" id="y_axis" class="form-control" required="">
-    					  % for val in names:
-      						% if len(names) > 1 and val == names[1]:
-      						  <option value="${val}" selected>${val}</option>
-      						% else:
-      						  <option value="${val}">${val}</option>
-      						% endif
-    					  % endfor
+                          % for val in names:
+                            % if len(names) > 1 and val == names[1]:
+                              <option value="${val}" selected>${val}</option>
+                            % else:
+                              <option value="${val}">${val}</option>
+                            % endif
+                          % endfor
                 </select>
             </div>
             <div class="col-sm-1 lab">Points radius</div>
             <div class="col-sm-2">
                 <input class="js-range-slider" id="slider_PS_radius" data-min=1 data-max=10 data-from=4 data-step=1 min=1 max=10 value=4 step=1 
-              							  data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," 
-              							  data-prettify-enabled="true" data-data-type="number" width="100%" >
+                                          data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," 
+                                          data-prettify-enabled="true" data-data-type="number" width="100%" >
             </div>
             <div class="col-sm-1 lab">Feasibility scale</div>
             <div class="col-sm-2" id="color_scale" style="padding: 0% 0% 0% 0%">
@@ -164,6 +165,16 @@
                 % endif
                 <svg id="color_axis" width="100%" height="20">
                 </svg>
+            </div>
+            <div class="col-sm-4">
+                <label class="normalisation-label" for="checkbox_normalisation" id="text_CB_normalisation">Normalise</label>
+                <input type="checkbox" value="mode" class="cb" id="checkbox_normalisation" 
+                % if bounds['Robustness'][0] > 0 or bounds['Robustness'][1] < 0:
+                  unchecked
+                % else:
+                  disabled
+                % endif
+                >
             </div>
         </div>
         <hr>
@@ -183,23 +194,23 @@
                     % else:
                       <div class="form-group" id="slider_${val}_wrapper">
                     % endif
-          							<label class="control-label" for="slider_${val}" id="text_${val}">Value of ${val}: ${real_val}</label>
-          							<!--input class="js-range-slider" id="slider_${val}" 
-          							  data-min=${min_val} data-max=${max_val} data-from=${(max_val-min_val)*0.5+min_val} data-step=${step_val} 
-          							  min=${min_val} max=${max_val} value=${(max_val-min_val)*0.5+min_val} step=${step_val} data-grid="true" data-grid-num="10" 
-          							  data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-data-type="number" -->
-          							<input type="range" list="tickmarks_${val}" id="slider_${val}" min=${min_val} max=${max_val} value=${min_val} step=${step_val} >
-          							<!-- maybe for the future because currently not supported everywhere -->
-          							<!--datalist id="tickmarks_${val}">
-          							  % for k,v in enumerate(uniqs[val]):
-          							    % if k == 0 or k == len(uniqs[val])-1:
+                                    <label class="control-label" for="slider_${val}" id="text_${val}">Value of ${val}: ${real_val}</label>
+                                    <!--input class="js-range-slider" id="slider_${val}" 
+                                      data-min=${min_val} data-max=${max_val} data-from=${(max_val-min_val)*0.5+min_val} data-step=${step_val} 
+                                      min=${min_val} max=${max_val} value=${(max_val-min_val)*0.5+min_val} step=${step_val} data-grid="true" data-grid-num="10" 
+                                      data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-data-type="number" -->
+                                    <input type="range" list="tickmarks_${val}" id="slider_${val}" min=${min_val} max=${max_val} value=${min_val} step=${step_val} >
+                                    <!-- maybe for the future because currently not supported everywhere -->
+                                    <!--datalist id="tickmarks_${val}">
+                                      % for k,v in enumerate(uniqs[val]):
+                                        % if k == 0 or k == len(uniqs[val])-1:
                               <option value="${v}" label="${v}">
                             % else:
                               <option value="${v}">
                             % endif
                           % endfor
                         </datalist-->
-          						</div>
+                                </div>
                   % endfor
                 % endif
             </div>
@@ -214,8 +225,28 @@ var width = d3.select("#plot_main").property("offsetWidth"),
     yDim = document.getElementById("y_axis").value,
     xDim_id = window.names.findIndex(x => x == xDim),
     yDim_id = window.names.findIndex(x => x == yDim),
-    radius = Number(d3.select("#slider_PS_radius").property("value"))
+    radius = Number(d3.select("#slider_PS_radius").property("value")),
+    robustness_max = d3.max(window.bounds['Robustness'],parseFloat),
+    robustness_min = d3.min(window.bounds['Robustness'],parseFloat)
 
+
+d3.select('#checkbox_normalisation').on("change", function() {
+    if(d3.select("#checkbox_normalisation").property("checked")) {
+      max_label_scale = Math.max(0, max_label_scale);
+      min_label_scale = Math.min(0, min_label_scale);
+      
+      color_scale = d3.scaleLinear()
+        .domain([min_label_scale, max_label_scale])
+        .range([0,1])
+    
+      calculate_gradient_middle(max_label_scale, min_label_scale);
+
+    } else {
+      calculate_color_scale()
+    }
+    draw();
+    draw_color_gradient_axis();
+})
 
 // event listener for change of selectected dimension for X axis
 d3.select("#x_axis").on("change", function() {
@@ -273,17 +304,16 @@ d3.select('#slider_PS_radius').on("change", function() {
   draw()
 });
 
+function calculate_gradient_middle(max_value, min_value) {
+  gradient_middle = (min_value + max_value)*0.5;
+}
+
 //###################################################  
 
 var margin = { top: 20, right: 20, bottom: 70, left: 70 },
     bgColor = d3.select("body").style("background-color"),
     noColor = "transparent",
-    gradient_middle = d3.min(window.bounds['Robustness'],parseFloat) == d3.max(window.bounds['Robustness'],parseFloat) ?
-      d3.min(window.bounds['Robustness'],parseFloat) :
-      (d3.min(window.bounds['Robustness'],parseFloat) < 0 ? 
-        (d3.max(window.bounds['Robustness'],parseFloat) < 0 ? 
-          (d3.min(window.bounds['Robustness'],parseFloat)+d3.max(window.bounds['Robustness'],parseFloat))*0.5 : 0) : 
-        (d3.min(window.bounds['Robustness'],parseFloat)+d3.max(window.bounds['Robustness'],parseFloat))*0.5 )
+    gradient_middle = calculate_gradient_middle(robustness_min, robustness_max);
     normalStrokeWidth = 1,
     hoverStrokeWidth = 4,
     transWidth = 2,
@@ -291,25 +321,30 @@ var margin = { top: 20, right: 20, bottom: 70, left: 70 },
 
 function draw_color_gradient_axis() {
   // following is responsible for correct axis of color gradient below the gradient picture
+  
+  color_xScale = d3.scaleLinear()
+  
+  //   ------
+  
   neg_color_xScale = d3.scaleLinear()
-      .domain([d3.min(window.bounds['Robustness'],parseFloat),gradient_middle])
+      .domain([min_label_scale,gradient_middle])
       .range([0.1*d3.select("#color_scale").property("offsetWidth"), 
               0.5*d3.select("#color_scale").property("offsetWidth")]);
   pos_color_xScale = d3.scaleLinear()
-      .domain([gradient_middle,d3.max(window.bounds['Robustness'],parseFloat)])
+      .domain([gradient_middle,max_label_scale])
       .range([0.5*d3.select("#color_scale").property("offsetWidth"), 
               0.9*d3.select("#color_scale").property("offsetWidth")]);
              
   neg_color_xAxis = d3.axisBottom(neg_color_xScale)
       .tickFormat(d => d == 0 ? "0" : (Math.abs(d) < 0.01 || Math.abs(d) >= 1000 ? d3.format(".2~e")(d) : d3.format(".3~r")(d)))
       .tickValues([
-          d3.min(window.bounds['Robustness'],parseFloat)
+          min_label_scale
           ]);
   pos_color_xAxis = d3.axisBottom(pos_color_xScale)
       .tickFormat(d => d == 0 ? "0" : (Math.abs(d) < 0.01 || Math.abs(d) >= 1000 ? d3.format(".2~e")(d) : d3.format(".3~r")(d)))
       .tickValues([
           gradient_middle,
-          d3.max(window.bounds['Robustness'],parseFloat)]);
+          max_label_scale]);
           
   d3.selectAll(".colorAxis").remove();
 
@@ -325,6 +360,28 @@ function draw_color_gradient_axis() {
       .call(pos_color_xAxis);
 }
 
+function calculate_color_scale() {
+    max_label = Math.max(robustness_max, Math.abs(robustness_min));
+  
+  if (robustness_min > 0) {
+    max_label_scale = max_label;
+    min_label_scale = robustness_min;
+    calculate_gradient_middle(max_label, robustness_min)
+  } else if (robustness_max < 0) {
+    max_label_scale = robustness_max;
+    min_label_scale = -max_label;
+    calculate_gradient_middle(robustness_max, -max_label)
+  } else {
+    max_label_scale = max_label;
+    min_label_scale = -max_label;
+    calculate_gradient_middle(max_label, -max_label)
+  }
+  
+  color_scale = d3.scaleLinear()
+    .domain([min_label_scale, max_label_scale])
+    .range([0,1])
+}
+
 function initiate_plot() {
   xScale = d3.scaleLinear()
     .domain([d3.min(window.bounds[xDim],parseFloat),
@@ -336,14 +393,9 @@ function initiate_plot() {
              d3.max(window.bounds[yDim],parseFloat)])
     .range([height - margin.bottom, margin.top]);
 
-  // following is responsible for correct colouring of points in the range of values in the result
-  negative_color_scale = d3.scaleLinear()
-    .domain([d3.min(window.bounds['Robustness'],parseFloat),gradient_middle])
-    .range([0,0.5])
-  positive_color_scale = d3.scaleLinear()
-    .domain([gradient_middle,d3.max(window.bounds['Robustness'],parseFloat)])
-    .range([0.5,1])
+  // following is responsible for correct colouring of points in the range of values in the result  
   
+  calculate_color_scale()
   draw_color_gradient_axis()
   
   // here stars the SVG object for the plot
@@ -483,6 +535,7 @@ function data_filter(d, i) {
   return true;
 }
 
+
 function draw() {
   
   d3.selectAll(".points").remove();     // because of the automatic redrawing of plot in response slider etc.
@@ -507,8 +560,7 @@ function draw() {
     .attr("cy", d => yScale(d[yDim]) )
     .attr("r", radius )
     //.attr("fill", d => d3.interpolateRdYlGn((d['Robustness']*0.01 + 1)*0.5) )
-    .attr("fill", d => Number(d['Robustness']) < gradient_middle ? eval(scheme_method)( Math.abs(negative_color_scale(Number(d['Robustness'])) - factor) ) : 
-                                                     eval(scheme_method)( Math.abs(positive_color_scale(Number(d['Robustness'])) - factor) ) )
+    .attr("fill", d => eval(scheme_method)( Math.abs(color_scale(Number(d['Robustness'])) - factor) ))
     //.attr("stroke", noColor )
     .attr("stroke-width", 0)
     .on("mouseover", handleMouseOver)
