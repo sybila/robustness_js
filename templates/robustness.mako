@@ -124,7 +124,7 @@
   <body>
     <div class="my-row">
         <div class="row row-header">
-            <div class="col-sm-1 lab">Horizontal axis</div>
+            <div class="col-sm-2 lab">Horizontal axis</div>
             <div class="col-sm-2">
                 <select name="xAxis" id="x_axis" class="form-control" required="">
                           % for val in names:
@@ -136,7 +136,7 @@
                           % endfor
                 </select>
             </div>
-            <div class="col-sm-1 lab">Vertical axis</div>
+            <div class="col-sm-2 lab">Vertical axis</div>
             <div class="col-sm-2">
                 <select name="yAxis" id="y_axis" class="form-control" required="">
                           % for val in names:
@@ -147,34 +147,6 @@
                             % endif
                           % endfor
                 </select>
-            </div>
-            <div class="col-sm-1 lab">Points radius</div>
-            <div class="col-sm-2">
-                <input class="js-range-slider" id="slider_PS_radius" data-min=1 data-max=10 data-from=4 data-step=1 min=1 max=10 value=4 step=1 
-                                          data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," 
-                                          data-prettify-enabled="true" data-data-type="number" width="100%" >
-            </div>
-            <div class="col-sm-1 lab">Feasibility scale</div>
-            <div class="col-sm-2" id="color_scale" style="padding: 0% 0% 0% 0%">
-                % if bounds['Robustness'][0] > 0:
-                  <img src="static/YlGn.png" alt="YlGn" style="padding: 0% 10% 0% 10%"  width="100%" height="20">
-                % elif bounds['Robustness'][1] < 0:
-                  <img src="static/YlOrRd.png" alt="YlOrRd" style="padding: 0% 10% 0% 10%"  width="100%" height="20">
-                % else:
-                  <img src="static/RdYlGn.png" alt="RdYlGn" style="padding: 0% 10% 0% 10%"  width="100%" height="20">
-                % endif
-                <svg id="color_axis" width="100%" height="20">
-                </svg>
-            </div>
-            <div class="col-sm-4">
-                <label class="normalisation-label" for="checkbox_normalisation" id="text_CB_normalisation">Normalise</label>
-                <input type="checkbox" value="mode" class="cb" id="checkbox_normalisation" 
-                % if bounds['Robustness'][0] > 0 or bounds['Robustness'][1] < 0:
-                  unchecked
-                % else:
-                  disabled
-                % endif
-                >
             </div>
         </div>
         <hr>
@@ -215,6 +187,38 @@
                 % endif
             </div>
             <div class="col-sm-10 visual" id="plot_main" style="max-width:750px" width="100%"></div>
+        </div>
+        <div class="row row-header">
+            <div class="col-sm-2 lab">Points radius</div>
+            <div class="col-sm-1">
+                <input class="js-range-slider" id="slider_PS_radius" data-min=1 data-max=10 data-from=4 data-step=1 min=1 max=10 value=4 step=1 
+                                          data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," 
+                                          data-prettify-enabled="true" data-data-type="number" width="100%" >
+            </div>
+            <div class="col-sm-2 lab">Feasibility scale</div>
+            <div class="col-sm-2" id="color_scale" style="padding: 0% 0% 0% 0%">
+                % if bounds['Robustness'][0] > 0:
+                  <img src="static/YlGn.png" alt="YlGn" style="padding: 0% 10% 0% 10%"  width="100%" height="20">
+                % elif bounds['Robustness'][1] < 0:
+                  <img src="static/YlOrRd.png" alt="YlOrRd" style="padding: 0% 10% 0% 10%"  width="100%" height="20">
+                % else:
+                  <img src="static/RdYlGn.png" alt="RdYlGn" style="padding: 0% 10% 0% 10%"  width="100%" height="20">
+                % endif
+                <svg id="color_axis" width="100%" height="20">
+                </svg>
+            </div>
+            
+            <div class="col-sm-2 lab">Normalise</div>
+            <div class="col-sm-2">
+                <input type="checkbox" value="mode" class="cb" id="checkbox_normalisation" 
+                % if bounds['Robustness'][0] > 0 or bounds['Robustness'][1] < 0:
+                  unchecked
+                % else:
+                  disabled
+                % endif
+                >
+            </div>
+            
         </div>
     </div>
     <script type="text/javascript" charset="utf-8">
