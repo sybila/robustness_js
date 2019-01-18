@@ -149,7 +149,7 @@
             </div>
             <div class="col-sm-1 lab">Points radius</div>
             <div class="col-sm-2">
-                <input class="js-range-slider" id="slider_PS_radius" data-min=1 data-max=10 data-from=4 data-step=1 min=1 max=10 value=4 step=1 
+                <input class="js-range-slider" id="slider_PS_radius" data-min=1 data-max=10 data-from=5 data-step=1 min=1 max=10 value=5 step=1 
               							  data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," 
               							  data-prettify-enabled="true" data-data-type="number" width="100%" >
             </div>
@@ -168,8 +168,16 @@
         </div>
         <hr>
         <div class="row nohide">
-            <div class="col-sm-2">
+            <div class="col-sm-1">
+                <p align="right">Info panel:</p>
+            </div>
+            <div class="col-sm-11">
                 <pre id="infoPanel"></pre>
+            </div>
+        </div>
+        <hr>
+        <div class="row nohide">
+            <div class="col-sm-2">
                 % if len(names) > 2:
                   % for val in names:
                     <% 
@@ -462,7 +470,14 @@ function update_axes() {
 
 function handleMouseOver(d, i) {
   if(d3.select(this).attr("class") == "points") {
-    infoPanel_data = "Feasibility: "+(Math.abs(Number(d['Robustness'])) < 0.01 ? Number(d['Robustness']).toExponential(3) : Number(d['Robustness']).toFixed(4))
+    var mouse = d3.mouse(this);
+      
+    xPos = (x => x == 0 ? "0" : (Math.abs(x) < 0.01 || Math.abs(x) >= 1000 ? d3.format(".2~e")(x) : d3.format(".3~r")(x)))(d[xDim])
+    yPos = (x => x == 0 ? "0" : (Math.abs(x) < 0.01 || Math.abs(x) >= 1000 ? d3.format(".2~e")(x) : d3.format(".3~r")(x)))(d[yDim])
+    feas = (x => x == 0 ? "0" : (Math.abs(x) < 0.01 || Math.abs(x) >= 1000 ? d3.format(".2~e")(x) : d3.format(".3~r")(x)))(d['Robustness'])
+    
+    //infoPanel_data = "Feasibility: "+(Math.abs(Number(d['Robustness'])) < 0.01 ? Number(d['Robustness']).toExponential(3) : Number(d['Robustness']).toFixed(4))+" at ["+xPos+","+yPos+"]";
+    infoPanel_data = "Feasibility: "+feas+" at ["+xPos+","+yPos+"]";
   }
   d3.select("#infoPanel").property("innerHTML", infoPanel_data)
 }
