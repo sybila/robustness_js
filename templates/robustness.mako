@@ -19,8 +19,7 @@
   uniqs  = {val : sorted(set([line[val] for line in data if line[val] is not None])) for val in names}
   #print uniqs
                  
-  bounds = {val : [min(uniqs[val]),max(uniqs[val])] for val in uniqs}
-  #print bounds  
+  bounds = {val : [min(uniqs[val]),max(uniqs[val])] for val in names}
 
   for k in bounds:
     if(k != 'Robustness'):
@@ -40,7 +39,7 @@
         bounds[k][1] = mx + rg*0.01
 
   names = [i for i in names if i != 'Robustness']
-  #print bounds['Robustness']
+  #print names  
 
 %>
 <html lan"en">
@@ -121,6 +120,7 @@
     </style>
   </head>
     
+
   <body>
     <div class="my-row">
         <div class="row row-header">
@@ -151,8 +151,15 @@
         </div>
         <hr>
         <div class="row nohide">
-            <div class="col-sm-2">
+            <div class="col-sm-1">
+                <p align="right">Info panel:</p>
+            </div>
+            <div class="col-sm-11">
                 <pre id="infoPanel"></pre>
+            </div>
+        </div>
+        <div class="row nohide">
+            <div class="col-sm-2">
                 % if len(names) > 2:
                   % for val in names:
                     <% 
@@ -210,13 +217,7 @@
             
             <div class="col-sm-2 lab">Normalise</div>
             <div class="col-sm-2">
-                <input type="checkbox" value="mode" class="cb" id="checkbox_normalisation" 
-                % if bounds['Robustness'][0] > 0 or bounds['Robustness'][1] < 0:
-                  unchecked
-                % else:
-                  disabled
-                % endif
-                >
+                <input type="checkbox" value="mode" class="cb" id="checkbox_normalisation" unchecked>
             </div>
             
         </div>
@@ -231,26 +232,57 @@ var width = d3.select("#plot_main").property("offsetWidth"),
     yDim_id = window.names.findIndex(x => x == yDim),
     radius = Number(d3.select("#slider_PS_radius").property("value")),
     robustness_max = d3.max(window.bounds['Robustness'],parseFloat),
-    robustness_min = d3.min(window.bounds['Robustness'],parseFloat)
+    robustness_min = d3.min(window.bounds['Robustness'],parseFloat),
+    common_max = Math.max(Math.abs(robustness_max), Math.abs(robustness_min)),
+    min_label_scale = robustness_min,
+    max_label_scale = robustness_max
 
+
+// ------------------------- new -------------------
 
 d3.select('#checkbox_normalisation').on("change", function() {
     if(d3.select("#checkbox_normalisation").property("checked")) {
-      max_label_scale = Math.max(0, max_label_scale);
-      min_label_scale = Math.min(0, min_label_scale);
+      if ((robustness_max > 0) && (robustness_min < 0)){
+        max_label_scale = common_max
+        min_label_scale = -common_max
+      } else if (robustness_max < 0){
+        max_label_scale = 0
+        min_label_scale = robustness_min
+      } else {
+        max_label_scale = robustness_max
+        min_label_scale = 0
+      }
       
-      color_scale = d3.scaleLinear()
-        .domain([min_label_scale, max_label_scale])
-        .range([0,1])
-    
       calculate_gradient_middle(max_label_scale, min_label_scale);
 
     } else {
-      calculate_color_scale()
+      max_label_scale = robustness_max
+      min_label_scale = robustness_min
+      
+      if ((robustness_max > 0) && (robustness_min < 0)){
+        gradient_middle = 0
+      } else {
+        calculate_gradient_middle(max_label_scale, min_label_scale);
+      }
     }
+    
+    negative_color_scale = d3.scaleLinear()
+      .domain([min_label_scale,gradient_middle])
+      .range([0,0.5])
+    positive_color_scale = d3.scaleLinear()
+      .domain([gradient_middle,max_label_scale])
+      .range([0.5,1])
+      
     draw();
     draw_color_gradient_axis();
 })
+
+function calculate_gradient_middle(max_value, min_value) {
+  gradient_middle = (min_value + max_value)*0.5;
+}
+
+
+// ------------------------ end new ---------------
 
 // event listener for change of selectected dimension for X axis
 d3.select("#x_axis").on("change", function() {
@@ -308,16 +340,17 @@ d3.select('#slider_PS_radius').on("change", function() {
   draw()
 });
 
-function calculate_gradient_middle(max_value, min_value) {
-  gradient_middle = (min_value + max_value)*0.5;
-}
-
 //###################################################  
 
 var margin = { top: 20, right: 20, bottom: 70, left: 70 },
     bgColor = d3.select("body").style("background-color"),
     noColor = "transparent",
-    gradient_middle = calculate_gradient_middle(robustness_min, robustness_max);
+    gradient_middle = d3.min(window.bounds['Robustness'],parseFloat) == d3.max(window.bounds['Robustness'],parseFloat) ?
+      d3.min(window.bounds['Robustness'],parseFloat) :
+      (d3.min(window.bounds['Robustness'],parseFloat) < 0 ? 
+        (d3.max(window.bounds['Robustness'],parseFloat) < 0 ? 
+          (d3.min(window.bounds['Robustness'],parseFloat)+d3.max(window.bounds['Robustness'],parseFloat))*0.5 : 0) : 
+        (d3.min(window.bounds['Robustness'],parseFloat)+d3.max(window.bounds['Robustness'],parseFloat))*0.5 )
     normalStrokeWidth = 1,
     hoverStrokeWidth = 4,
     transWidth = 2,
@@ -325,17 +358,12 @@ var margin = { top: 20, right: 20, bottom: 70, left: 70 },
 
 function draw_color_gradient_axis() {
   // following is responsible for correct axis of color gradient below the gradient picture
-  
-  color_xScale = d3.scaleLinear()
-  
-  //   ------
-  
   neg_color_xScale = d3.scaleLinear()
-      .domain([min_label_scale,gradient_middle])
+      .domain([min_label_scale, gradient_middle])
       .range([0.1*d3.select("#color_scale").property("offsetWidth"), 
               0.5*d3.select("#color_scale").property("offsetWidth")]);
   pos_color_xScale = d3.scaleLinear()
-      .domain([gradient_middle,max_label_scale])
+      .domain([gradient_middle, max_label_scale])
       .range([0.5*d3.select("#color_scale").property("offsetWidth"), 
               0.9*d3.select("#color_scale").property("offsetWidth")]);
              
@@ -364,28 +392,6 @@ function draw_color_gradient_axis() {
       .call(pos_color_xAxis);
 }
 
-function calculate_color_scale() {
-    max_label = Math.max(robustness_max, Math.abs(robustness_min));
-  
-  if (robustness_min > 0) {
-    max_label_scale = max_label;
-    min_label_scale = robustness_min;
-    calculate_gradient_middle(max_label, robustness_min)
-  } else if (robustness_max < 0) {
-    max_label_scale = robustness_max;
-    min_label_scale = -max_label;
-    calculate_gradient_middle(robustness_max, -max_label)
-  } else {
-    max_label_scale = max_label;
-    min_label_scale = -max_label;
-    calculate_gradient_middle(max_label, -max_label)
-  }
-  
-  color_scale = d3.scaleLinear()
-    .domain([min_label_scale, max_label_scale])
-    .range([0,1])
-}
-
 function initiate_plot() {
   xScale = d3.scaleLinear()
     .domain([d3.min(window.bounds[xDim],parseFloat),
@@ -397,9 +403,14 @@ function initiate_plot() {
              d3.max(window.bounds[yDim],parseFloat)])
     .range([height - margin.bottom, margin.top]);
 
-  // following is responsible for correct colouring of points in the range of values in the result  
+  // following is responsible for correct colouring of points in the range of values in the result
+  negative_color_scale = d3.scaleLinear()
+    .domain([d3.min(window.bounds['Robustness'],parseFloat),gradient_middle])
+    .range([0,0.5])
+  positive_color_scale = d3.scaleLinear()
+    .domain([gradient_middle,d3.max(window.bounds['Robustness'],parseFloat)])
+    .range([0.5,1])
   
-  calculate_color_scale()
   draw_color_gradient_axis()
   
   // here stars the SVG object for the plot
@@ -518,7 +529,14 @@ function update_axes() {
 
 function handleMouseOver(d, i) {
   if(d3.select(this).attr("class") == "points") {
-    infoPanel_data = "Feasibility: "+(Math.abs(Number(d['Robustness'])) < 0.01 ? Number(d['Robustness']).toExponential(3) : Number(d['Robustness']).toFixed(4))
+    var mouse = d3.mouse(this);
+      
+    xPos = (x => x == 0 ? "0" : (Math.abs(x) < 0.01 || Math.abs(x) >= 1000 ? d3.format(".2~e")(x) : d3.format(".3~r")(x)))(d[xDim])
+    yPos = (x => x == 0 ? "0" : (Math.abs(x) < 0.01 || Math.abs(x) >= 1000 ? d3.format(".2~e")(x) : d3.format(".3~r")(x)))(d[yDim])
+    feas = (x => x == 0 ? "0" : (Math.abs(x) < 0.01 || Math.abs(x) >= 1000 ? d3.format(".2~e")(x) : d3.format(".3~r")(x)))(d['Robustness'])
+    
+    //infoPanel_data = "Feasibility: "+(Math.abs(Number(d['Robustness'])) < 0.01 ? Number(d['Robustness']).toExponential(3) : Number(d['Robustness']).toFixed(4))+" at ["+xPos+","+yPos+"]";
+    infoPanel_data = "Feasibility: "+feas+" at ["+xPos+","+yPos+"]";
   }
   d3.select("#infoPanel").property("innerHTML", infoPanel_data)
 }
@@ -538,7 +556,6 @@ function data_filter(d, i) {
   }
   return true;
 }
-
 
 function draw() {
   
@@ -564,7 +581,8 @@ function draw() {
     .attr("cy", d => yScale(d[yDim]) )
     .attr("r", radius )
     //.attr("fill", d => d3.interpolateRdYlGn((d['Robustness']*0.01 + 1)*0.5) )
-    .attr("fill", d => eval(scheme_method)( Math.abs(color_scale(Number(d['Robustness'])) - factor) ))
+    .attr("fill", d => Number(d['Robustness']) < gradient_middle ? eval(scheme_method)( Math.abs(negative_color_scale(Number(d['Robustness'])) - factor) ) : 
+                                                     eval(scheme_method)( Math.abs(positive_color_scale(Number(d['Robustness'])) - factor) ) )
     //.attr("stroke", noColor )
     .attr("stroke-width", 0)
     .on("mouseover", handleMouseOver)
