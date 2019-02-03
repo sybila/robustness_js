@@ -148,6 +148,12 @@
                           % endfor
                 </select>
             </div>
+            <div class="col-sm-2 lab">Points radius</div>
+            <div class="col-sm-1">
+                <input class="js-range-slider" id="slider_PS_radius" data-min=1 data-max=10 data-from=4 data-step=1 min=1 max=10 value=4 step=1 
+                                          data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," 
+                                          data-prettify-enabled="true" data-data-type="number" width="100%" >
+            </div>
         </div>
         <hr>
         <div class="row nohide">
@@ -196,12 +202,6 @@
             <div class="col-sm-10 visual" id="plot_main" style="max-width:750px" width="100%"></div>
         </div>
         <div class="row row-header">
-            <div class="col-sm-2 lab">Points radius</div>
-            <div class="col-sm-1">
-                <input class="js-range-slider" id="slider_PS_radius" data-min=1 data-max=10 data-from=4 data-step=1 min=1 max=10 value=4 step=1 
-                                          data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," 
-                                          data-prettify-enabled="true" data-data-type="number" width="100%" >
-            </div>
             <div class="col-sm-2 lab">Feasibility scale</div>
             <div class="col-sm-2" id="color_scale" style="padding: 0% 0% 0% 0%">
                 % if bounds['Robustness'][0] > 0:
@@ -216,7 +216,7 @@
             </div>
             
             <div class="col-sm-2 lab">Normalise</div>
-            <div class="col-sm-2">
+            <div class="col-sm-2" style="padding: 5px 0% 0% 1%">
                 <input type="checkbox" value="mode" class="cb" id="checkbox_normalisation" unchecked>
             </div>
             
