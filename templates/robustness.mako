@@ -179,23 +179,14 @@
                     % else:
                       <div class="form-group" id="slider_${val}_wrapper">
                     % endif
-                                    <label class="control-label" for="slider_${val}" id="text_${val}">Value of ${val}: ${real_val}</label>
-                                    <!--input class="js-range-slider" id="slider_${val}" 
-                                      data-min=${min_val} data-max=${max_val} data-from=${(max_val-min_val)*0.5+min_val} data-step=${step_val} 
-                                      min=${min_val} max=${max_val} value=${(max_val-min_val)*0.5+min_val} step=${step_val} data-grid="true" data-grid-num="10" 
-                                      data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-data-type="number" -->
-                                    <input type="range" list="tickmarks_${val}" id="slider_${val}" min=${min_val} max=${max_val} value=${min_val} step=${step_val} >
-                                    <!-- maybe for the future because currently not supported everywhere -->
-                                    <!--datalist id="tickmarks_${val}">
-                                      % for k,v in enumerate(uniqs[val]):
-                                        % if k == 0 or k == len(uniqs[val])-1:
-                              <option value="${v}" label="${v}">
-                            % else:
-                              <option value="${v}">
-                            % endif
-                          % endfor
-                        </datalist-->
-                                </div>
+                      <label class="control-label" for="slider_${val}" id="text_${val}">Value of ${val}: ${real_val}</label>
+                      <input type="range" list="tickmarks_${val}" id="slider_${val}" min=${min_val} max=${max_val} value=${min_val} step=${step_val}
+                    % if max_val != min_val:
+                      >
+                    % else:
+                      hidden>
+                    % endif
+                      </div>
                   % endfor
                 % endif
             </div>
