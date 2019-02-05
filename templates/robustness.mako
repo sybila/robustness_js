@@ -208,7 +208,10 @@
             
             <div class="col-sm-2 lab">Normalise</div>
             <div class="col-sm-2" style="padding: 5px 0% 0% 1%">
-                <input type="checkbox" value="mode" class="cb" id="checkbox_normalisation" unchecked>
+                <input type="checkbox" value="mode" class="cb" id="checkbox_normalisation" style="margin-right: 10px" unchecked>
+                <div class="help"><img src="static/help.png" alt="help" height="15" width="15" style="margin: 0 0 10px 15px">
+                  <span class="helptext">Normalization scales the data in two possible ways: (a) it prolongs the shorter (positive/negative) scale such that both scales have the same maximum value; (b) in the case of the one-sided interval, the scale is prolonged to 0.</span>
+                </div>
             </div>
             
         </div>
