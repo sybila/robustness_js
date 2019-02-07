@@ -2501,6 +2501,9 @@ input[type="search"] {
 }
 .form-group {
   margin-bottom: 0px;
+  padding: 7px 0 3px 0;
+  border-top-width: 1px;
+  border-top-style: solid;
 }
 .radio,
 .checkbox {
